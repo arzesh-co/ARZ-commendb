@@ -76,8 +76,6 @@ func GetArrayValidations(api *Api) map[string]int8 {
 			canSee := CheckRoles(field.DenyRoleKeys, userRole)
 			if canSee {
 				fields[field.DbName] = 1
-			} else {
-				fields[field.DbName] = 0
 			}
 		} else {
 			fields[field.DbName] = 1
