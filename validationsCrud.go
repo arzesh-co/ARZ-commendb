@@ -19,7 +19,7 @@ func CheckRoles(endPointRoles, userRoles []string) bool {
 	return false
 }
 
-func WriteValidations(value map[string]any, api Api) map[string]any {
+func WriteValidations(value map[string]any, api *Api) map[string]any {
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
 		return nil
@@ -40,7 +40,7 @@ func WriteValidations(value map[string]any, api Api) map[string]any {
 	}
 	return value
 }
-func GetOneValidations(value map[string]any, api Api) map[string]any {
+func GetOneValidations(value map[string]any, api *Api) map[string]any {
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
 		return nil
@@ -61,7 +61,7 @@ func GetOneValidations(value map[string]any, api Api) map[string]any {
 	}
 	return value
 }
-func GetArrayValidations(api Api) map[string]int8 {
+func GetArrayValidations(api *Api) map[string]int8 {
 	fields := make(map[string]int8)
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
