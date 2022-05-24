@@ -12,11 +12,11 @@ func CheckRoles(endPointRoles, userRoles []string) bool {
 	for _, role := range userRoles {
 		for _, pointRole := range endPointRoles {
 			if pointRole == role {
-				return true
+				return false
 			}
 		}
 	}
-	return false
+	return true
 }
 
 func WriteValidations(value map[string]any, api *Api) map[string]any {
