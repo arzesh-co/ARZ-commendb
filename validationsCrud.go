@@ -79,6 +79,8 @@ func GetArrayValidations(api *Api) map[string]int8 {
 			} else {
 				fields[field.DbName] = 0
 			}
+		} else {
+			fields[field.DbName] = 1
 		}
 
 	}
