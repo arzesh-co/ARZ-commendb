@@ -1,5 +1,7 @@
 package CommenDb
 
+import "encoding/json"
+
 type Api struct {
 	Route   string
 	Method  string
@@ -19,7 +21,12 @@ func CheckRoles(endPointRoles, userRoles []string) bool {
 	return true
 }
 
-func WriteValidations(value map[string]any, api *Api) map[string]any {
+func WriteValidations(data []byte, api *Api) map[string]any {
+	value := make(map[string]any)
+	err := json.Unmarshal(data, &value)
+	if err != nil {
+		return nil
+	}
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
 		return nil
