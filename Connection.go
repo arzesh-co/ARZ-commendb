@@ -118,3 +118,29 @@ func getEndPointFileds(route string, method string, service string) ([]fieldsEnt
 	}
 	return userInfo.Validator, nil
 }
+
+type accountService struct {
+	Account string `json:"account"`
+}
+
+func getCurrentAccount(account string, service string) string {
+	req, err := http.NewRequest("GET", os.Getenv("coreApi")+"/api/core/account/"+account+"/"+service, nil)
+	if err != nil {
+		return ""
+	}
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return ""
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return ""
+	}
+	accountService := &accountService{}
+	err = json.Unmarshal(body, accountService)
+	if err != nil {
+		return ""
+	}
+	return accountService.Account
+}

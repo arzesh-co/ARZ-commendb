@@ -8,7 +8,7 @@ type Api struct {
 	Service string
 	User    string
 	Account string
-	lang    string
+	Lang    string
 }
 
 func CheckRoles(endPointRoles, userRoles []string) bool {
@@ -27,19 +27,20 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 	var errors []*ResponseErrors
 	err := json.Unmarshal(data, &value)
 	if err != nil {
-		Response := GetErrors("ARZ-input", api.Account, api.lang, nil)
+		Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
 		errors = append(errors, Response)
 		return nil, errors
 	}
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
-		Response := GetErrors("ARZ-write_in", api.Account, api.lang, nil)
+		Response := GetErrors("ARZ-write_in", api.Account, api.Lang, nil)
 		errors = append(errors, Response)
 		return nil, errors
 	}
-	userRole, err := getUserRole(api.User, api.Account)
+	userAccount := getCurrentAccount(api.Account, "user")
+	userRole, err := getUserRole(api.User, userAccount)
 	if err != nil {
-		Response := GetErrors("ARZ-access", api.Account, api.lang, nil)
+		Response := GetErrors("ARZ-access", api.Account, api.Lang, nil)
 		errors = append(errors, Response)
 		return nil, errors
 	}
@@ -53,7 +54,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 					if len(field.Validators) != 0 {
 						for _, validator := range field.Validators {
 							validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
-								api.lang, field.Title[api.lang])
+								api.Lang, field.Title[api.Lang])
 							if validateErr != nil {
 								errors = append(errors, validateErr)
 							}
@@ -64,7 +65,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 				if len(field.Validators) != 0 {
 					for _, validator := range field.Validators {
 						validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
-							api.lang, field.Title[api.lang])
+							api.Lang, field.Title[api.Lang])
 						if validateErr != nil {
 							errors = append(errors, validateErr)
 						}
@@ -75,7 +76,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 	}
 	body, err := json.Marshal(value)
 	if err != nil {
-		Response := GetErrors("ARZ-input", api.Account, api.lang, nil)
+		Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
 		errors = append(errors, Response)
 		return nil, errors
 	}
@@ -86,7 +87,8 @@ func GetOneValidations(value map[string]any, api *Api) map[string]any {
 	if err != nil {
 		return nil
 	}
-	userRole, err := getUserRole(api.User, api.Account)
+	userAccount := getCurrentAccount(api.Account, "user")
+	userRole, err := getUserRole(api.User, userAccount)
 	if err != nil {
 		return nil
 	}
@@ -108,7 +110,8 @@ func GetArrayValidations(api *Api) map[string]int8 {
 	if err != nil {
 		return nil
 	}
-	userRole, err := getUserRole(api.User, api.Account)
+	userAccount := getCurrentAccount(api.Account, "user")
+	userRole, err := getUserRole(api.User, userAccount)
 	if err != nil {
 		return nil
 	}
