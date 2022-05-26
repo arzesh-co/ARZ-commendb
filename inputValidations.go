@@ -59,7 +59,7 @@ func numericString(value interface{}, param any) error {
 	return nil
 }
 func integer(value interface{}, param any) error {
-	switch _ := value.(type) {
+	switch value.(type) {
 	case int:
 		return nil
 	case float64:
@@ -71,7 +71,7 @@ func integer(value interface{}, param any) error {
 	}
 }
 func float(value interface{}, param any) error {
-	switch _ := value.(type) {
+	switch value.(type) {
 	case int:
 		return errors.New("value is note float")
 	case float64:
