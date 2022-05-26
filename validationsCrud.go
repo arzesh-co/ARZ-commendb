@@ -63,7 +63,21 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 				}
 			} else {
 				if len(field.Validators) != 0 {
+
 					for _, validator := range field.Validators {
+						validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+							api.Lang, field.Title[api.Lang])
+						if validateErr != nil {
+							errors = append(errors, validateErr)
+						}
+					}
+				}
+			}
+		} else {
+			if len(field.Validators) != 0 {
+				canSet := CheckRoles(field.DenyRoleKeys, userRole)
+				for _, validator := range field.Validators {
+					if validator.Rule == "required" && canSet {
 						validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
 							api.Lang, field.Title[api.Lang])
 						if validateErr != nil {
