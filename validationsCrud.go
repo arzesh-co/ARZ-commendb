@@ -22,7 +22,7 @@ func CheckRoles(endPointRoles, userRoles []string) bool {
 	return true
 }
 
-func WriteValidations(data []byte, api *Api) (map[string]any, []*ResponseErrors) {
+func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 	value := make(map[string]any)
 	var errors []*ResponseErrors
 	err := json.Unmarshal(data, &value)
@@ -73,7 +73,13 @@ func WriteValidations(data []byte, api *Api) (map[string]any, []*ResponseErrors)
 			}
 		}
 	}
-	return value, errors
+	body, err := json.Marshal(value)
+	if err != nil {
+		Response := GetErrors("ARZ-input", api.Account, api.lang, nil)
+		errors = append(errors, Response)
+		return nil, errors
+	}
+	return body, errors
 }
 func GetOneValidations(value map[string]any, api *Api) map[string]any {
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
