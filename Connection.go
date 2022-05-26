@@ -52,8 +52,9 @@ type roles struct {
 	Data []string `json:"data"`
 }
 type fieldsEntities struct {
-	DbName     string `json:"db_name" bson:"db_name"`
-	MultiLang  bool   `json:"multi_lang" bson:"multi_lang"`
+	DbName     string            `json:"db_name" bson:"db_name"`
+	Title      map[string]string `json:"title" bson:"title"`
+	MultiLang  bool              `json:"multi_lang" bson:"multi_lang"`
 	Validators []struct {
 		Rule  string `json:"rule" bson:"rule"`
 		Param int64  `json:"param" bson:"param"`
@@ -62,6 +63,7 @@ type fieldsEntities struct {
 	DataType     string                 `json:"data_type" bson:"data_type"`
 	DisplayType  string                 `json:"display_type" bson:"display_type"`
 	Conf         map[string]interface{} `json:"conf" bson:"conf"`
+	Features     []string               `json:"features" bson:"features"`
 	DenyRoleKeys []string               `json:"deny_role_keys" bson:"deny_role_keys"`
 }
 type validation struct {

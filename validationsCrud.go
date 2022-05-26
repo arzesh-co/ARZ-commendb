@@ -8,6 +8,7 @@ type Api struct {
 	Service string
 	User    string
 	Account string
+	lang    string
 }
 
 func CheckRoles(endPointRoles, userRoles []string) bool {
@@ -21,19 +22,26 @@ func CheckRoles(endPointRoles, userRoles []string) bool {
 	return true
 }
 
-func WriteValidations(data []byte, api *Api) map[string]any {
+func WriteValidations(data []byte, api *Api) (map[string]any, []*ResponseErrors) {
 	value := make(map[string]any)
+	var errors []*ResponseErrors
 	err := json.Unmarshal(data, &value)
 	if err != nil {
-		return nil
+		Response := GetErrors("ARZ-input", api.Account, api.lang, nil)
+		errors = append(errors, Response)
+		return nil, errors
 	}
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
-		return nil
+		Response := GetErrors("ARZ-write_in", api.Account, api.lang, nil)
+		errors = append(errors, Response)
+		return nil, errors
 	}
 	userRole, err := getUserRole(api.User, api.Account)
 	if err != nil {
-		return nil
+		Response := GetErrors("ARZ-access", api.Account, api.lang, nil)
+		errors = append(errors, Response)
+		return nil, errors
 	}
 	for _, field := range validation {
 		if _, ok := value[field.DbName]; ok {
@@ -41,11 +49,31 @@ func WriteValidations(data []byte, api *Api) map[string]any {
 				canSet := CheckRoles(field.DenyRoleKeys, userRole)
 				if !canSet {
 					delete(value, field.DbName)
+				} else {
+					if len(field.Validators) != 0 {
+						for _, validator := range field.Validators {
+							validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+								api.lang, field.Title[api.lang])
+							if validateErr != nil {
+								errors = append(errors, validateErr)
+							}
+						}
+					}
+				}
+			} else {
+				if len(field.Validators) != 0 {
+					for _, validator := range field.Validators {
+						validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+							api.lang, field.Title[api.lang])
+						if validateErr != nil {
+							errors = append(errors, validateErr)
+						}
+					}
 				}
 			}
 		}
 	}
-	return value
+	return value, errors
 }
 func GetOneValidations(value map[string]any, api *Api) map[string]any {
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)
