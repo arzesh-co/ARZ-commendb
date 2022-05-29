@@ -38,27 +38,32 @@ func createFilter(cond filter) interface{} {
 	case "not Empty":
 		return bson.M{"$exists": true}
 	case "=":
-		return bson.M{"$eq": cond.Condition}
+		return bson.M{"$eq": ConvertFilterCondition(cond.Condition)}
 	case ">=":
-		return bson.M{"$gte": cond.Condition}
+		return bson.M{"$gte": ConvertFilterCondition(cond.Condition)}
 	case "<=":
-		return bson.M{"$lte": cond.Condition}
+		return bson.M{"$lte": ConvertFilterCondition(cond.Condition)}
 	case ">":
-		return bson.M{"$gt": cond.Condition}
+		return bson.M{"$gt": ConvertFilterCondition(cond.Condition)}
 	case "<":
-		return bson.M{"$lt": cond.Condition}
-	case "$$today":
-		return today()
-	case "$$nday_before":
-		return nDayBefore(cond.Condition.(int64))
-	case "$$nday_after":
-		return nDayAfter(cond.Condition.(int64))
-	case "$$begin_of_this_year":
-		return BeginOfThisYear()
-	case "$$begin_of_this_month":
-		return BeginOfThisMonth()
+		return bson.M{"$lt": ConvertFilterCondition(cond.Condition)}
 	}
 	return bson.M{}
+}
+func ConvertFilterCondition(condition any) any {
+	switch condition.(type) {
+	case string:
+		switch ConvertorType(condition.(string)) {
+		case "func":
+			return findFunc(condition.(string))
+		case "string":
+			return condition
+		default:
+			return condition
+		}
+	default:
+		return condition
+	}
 }
 func CreateAggregation(aggr string) map[string]interface{} {
 	agg := &aggregation{}

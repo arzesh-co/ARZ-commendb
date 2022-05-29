@@ -1,22 +1,50 @@
 package CommenDb
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
-func today() int64 {
-	return time.Now().Unix()
+func ConvertorToInt64(n any) int64 {
+	switch n := n.(type) {
+	case int:
+		return int64(n)
+	case int8:
+		return int64(n)
+	case int16:
+		return int64(n)
+	case int32:
+		return int64(n)
+	case int64:
+		return int64(n)
+	case string:
+		num, err := strconv.ParseInt(n, 10, 64)
+		if err == nil {
+			return int64(0)
+		}
+		return num
+	}
+	return int64(0)
 }
-func nDayBefore(days int64) int64 {
-	return time.Now().Add((time.Duration(days) * -24) * time.Hour).Unix()
+func today(days any) any {
+	year, month, day := time.Now().Date()
+	theTime := time.Date(year, month, day, 0, 0, 0, 0, time.Local)
+	return theTime.Unix()
 }
-func nDayAfter(days int64) int64 {
-	return time.Now().Add((time.Duration(days) * -24) * time.Hour).Unix()
+func nDayBefore(days any) any {
+	intDay := ConvertorToInt64(days)
+	return time.Now().Add((time.Duration(intDay) * -24) * time.Hour).Unix()
 }
-func BeginOfThisYear() int64 {
+func nDayAfter(days any) any {
+	intDay := ConvertorToInt64(days)
+	return time.Now().Add((time.Duration(intDay) * -24) * time.Hour).Unix()
+}
+func BeginOfThisYear(days any) any {
 	year, _, _ := time.Now().Date()
 	theTime := time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
 	return theTime.Unix()
 }
-func BeginOfThisMonth() int64 {
+func BeginOfThisMonth(days any) any {
 	year, month, _ := time.Now().Date()
 	theTime := time.Date(year, month, 1, 0, 0, 0, 0, time.Local)
 	return theTime.Unix()
@@ -36,3 +64,13 @@ func BeginOfThisMonth() int64 {
 //	theTime := time.Date(year, month, 1, 0, 0, 0, 0, time.Local)
 //	return theTime.Unix()
 //}
+
+func SetCommenFunc() map[string]func(days any) any {
+	funcs := make(map[string]func(days any) any)
+	funcs["today"] = today
+	funcs["nday_before"] = nDayBefore
+	funcs["nday_after"] = nDayAfter
+	funcs["begin_of_this_year"] = BeginOfThisYear
+	funcs["begin_of_this_month"] = BeginOfThisMonth
+	return funcs
+}
