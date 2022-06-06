@@ -1,6 +1,8 @@
 package CommenDb
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type Api struct {
 	Route   string
@@ -52,24 +54,17 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 					delete(value, field.DbName)
 				} else {
 					if len(field.Validators) != 0 {
-						for _, validator := range field.Validators {
-							validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
-								api.Lang, field.Title[api.Lang])
-							if validateErr != nil {
-								errors = append(errors, validateErr)
-							}
+						InputErr := Validations(field, value, api)
+						if len(InputErr) != 0 {
+							errors = append(errors, InputErr...)
 						}
 					}
 				}
 			} else {
 				if len(field.Validators) != 0 {
-
-					for _, validator := range field.Validators {
-						validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
-							api.Lang, field.Title[api.Lang])
-						if validateErr != nil {
-							errors = append(errors, validateErr)
-						}
+					InputErr := Validations(field, value, api)
+					if len(InputErr) != 0 {
+						errors = append(errors, InputErr...)
 					}
 				}
 			}
@@ -95,6 +90,58 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 		return nil, errors
 	}
 	return body, errors
+}
+func Validations(field fieldsEntities, value map[string]any, api *Api) []*ResponseErrors {
+	var errors []*ResponseErrors
+	arrayOfObjFields := make(map[string]fieldsEntities)
+	arrayFields := make(map[string]fieldsEntities)
+	ObjFields := make(map[string]fieldsEntities)
+	children := make(map[string]fieldsEntities)
+	for _, validator := range field.Validators {
+		if field.DataType == "array_of_object" {
+			arrayOfObjFields[field.DbName] = field
+		} else if field.DataType == "array" {
+			arrayFields[field.DbName] = field
+		} else if field.DataType == "object" {
+			ObjFields[field.DbName] = field
+		} else if field.Parent != "" {
+			children[field.DbName] = field
+		} else {
+			validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+				api.Lang, field.Title[api.Lang])
+			if validateErr != nil {
+				errors = append(errors, validateErr)
+			}
+		}
+	}
+	for _, element := range children {
+		if _, ok := arrayOfObjFields[element.Parent]; ok {
+			for _, validator := range element.Validators {
+				validateErr := ValidationArrayOfObjInput(value[element.DbName].([]map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
+					api.Lang, element.Title[api.Lang])
+				if validateErr != nil {
+					errors = append(errors, validateErr)
+				}
+			}
+		} else if _, ok = arrayFields[element.Parent]; ok {
+			for _, validator := range element.Validators {
+				validateErr := ValidationArray(value[element.DbName].([]any), validator.Rule, validator.Param, api.Account,
+					api.Lang, element.Title[api.Lang])
+				if validateErr != nil {
+					errors = append(errors, validateErr)
+				}
+			}
+		} else if _, ok = ObjFields[element.Parent]; ok {
+			for _, validator := range element.Validators {
+				validateErr := ValidationObjInput(value[element.DbName].(map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
+					api.Lang, element.Title[api.Lang])
+				if validateErr != nil {
+					errors = append(errors, validateErr)
+				}
+			}
+		}
+	}
+	return errors
 }
 func GetOneValidations(value map[string]any, api *Api) map[string]any {
 	validation, err := getEndPointFileds(api.Route, api.Method, api.Service)

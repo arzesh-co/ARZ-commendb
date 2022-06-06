@@ -51,14 +51,16 @@ func getError(key string, account string, lang string, params map[string]string)
 type roles struct {
 	Data []string `json:"data"`
 }
+type Validator struct {
+	Rule  string `json:"rule" bson:"rule"`
+	Param int64  `json:"param" bson:"param"`
+}
 type fieldsEntities struct {
-	DbName     string            `json:"db_name" bson:"db_name"`
-	Title      map[string]string `json:"title" bson:"title"`
-	MultiLang  bool              `json:"multi_lang" bson:"multi_lang"`
-	Validators []struct {
-		Rule  string `json:"rule" bson:"rule"`
-		Param int64  `json:"param" bson:"param"`
-	} `json:"validators" bson:"validators"`
+	DbName       string                 `json:"db_name" bson:"db_name"`
+	Title        map[string]string      `json:"title" bson:"title"`
+	Parent       string                 `json:"parent" bson:"parent"`
+	MultiLang    bool                   `json:"multi_lang" bson:"multi_lang"`
+	Validators   []Validator            `json:"validators" bson:"validators"`
 	Required     bool                   `json:"required" bson:"required"`
 	DataType     string                 `json:"data_type" bson:"data_type"`
 	DisplayType  string                 `json:"display_type" bson:"display_type"`
