@@ -122,14 +122,40 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 			if _, ok = value[element.Parent]; !ok {
 				continue
 			}
+			var parent []map[string]any
+			arrayMap, err := json.Marshal(value[element.Parent])
+			if err != nil {
+				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				errors = append(errors, Response)
+				return nil, errors
+			}
+			err = json.Unmarshal(arrayMap, &parent)
+			if err != nil {
+				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				errors = append(errors, Response)
+				return nil, errors
+			}
 			for _, validator := range element.Validators {
-				validateErr := ValidationArrayOfObjInput(value[element.Parent].([]map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
+				validateErr := ValidationArrayOfObjInput(parent, element.DbName, validator.Rule, validator.Param, api.Account,
 					api.Lang, element.Title[api.Lang])
 				if validateErr != nil {
 					errors = append(errors, validateErr)
 				}
 			}
 		} else if _, ok = ObjFields[element.Parent]; ok {
+			parent := make(map[string]any)
+			arrayMap, err := json.Marshal(value[element.Parent])
+			if err != nil {
+				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				errors = append(errors, Response)
+				return nil, errors
+			}
+			err = json.Unmarshal(arrayMap, &parent)
+			if err != nil {
+				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				errors = append(errors, Response)
+				return nil, errors
+			}
 			for _, validator := range element.Validators {
 				validateErr := ValidationObjInput(value[element.Parent].(map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
 					api.Lang, element.Title[api.Lang])
