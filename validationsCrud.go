@@ -34,6 +34,9 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 	err := json.Unmarshal(data, &value)
 	if err != nil {
 		Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+		Err := make(map[string]any)
+		Err["validation"] = err.Error()
+		Response.MetaData = Err
 		errors = append(errors, Response)
 		return nil, errors
 	}
@@ -126,12 +129,18 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 			arrayMap, err := json.Marshal(value[element.Parent])
 			if err != nil {
 				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				Err := make(map[string]any)
+				Err["validation"] = err.Error()
+				Response.MetaData = Err
 				errors = append(errors, Response)
 				return nil, errors
 			}
 			err = json.Unmarshal(arrayMap, &parent)
 			if err != nil {
 				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				Err := make(map[string]any)
+				Err["validation"] = err.Error()
+				Response.MetaData = Err
 				errors = append(errors, Response)
 				return nil, errors
 			}
@@ -147,12 +156,18 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 			arrayMap, err := json.Marshal(value[element.Parent])
 			if err != nil {
 				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				Err := make(map[string]any)
+				Err["validation"] = err.Error()
+				Response.MetaData = Err
 				errors = append(errors, Response)
 				return nil, errors
 			}
 			err = json.Unmarshal(arrayMap, &parent)
 			if err != nil {
 				Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+				Err := make(map[string]any)
+				Err["validation"] = err.Error()
+				Response.MetaData = Err
 				errors = append(errors, Response)
 				return nil, errors
 			}
@@ -177,6 +192,9 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 	body, err := json.Marshal(value)
 	if err != nil {
 		Response := GetErrors("ARZ-input", api.Account, api.Lang, nil)
+		Err := make(map[string]any)
+		Err["validation"] = err.Error()
+		Response.MetaData = Err
 		errors = append(errors, Response)
 		return nil, errors
 	}
