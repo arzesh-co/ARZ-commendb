@@ -2,9 +2,9 @@ package CommenDb
 
 import (
 	"encoding/json"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"reflect"
 )
 
 type filter struct {
@@ -63,8 +63,7 @@ func ConvertFilterCondition(condition any) any {
 			return condition
 		}
 	default:
-		dataType := reflect.TypeOf(condition)
-		if dataType == reflect.TypeOf([]string{}) {
+		if fmt.Sprintf("%T", condition) == "[]string" {
 			return bson.M{"$in": condition}
 		}
 		return condition
