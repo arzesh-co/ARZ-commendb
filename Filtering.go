@@ -39,6 +39,9 @@ func createFilter(cond filter) interface{} {
 	case "not Empty":
 		return bson.M{"$exists": true}
 	case "=":
+		if fmt.Sprintf("%T", cond.Condition) == "[]interface {}" {
+			return bson.M{"$in": cond.Condition}
+		}
 		return bson.M{"$eq": ConvertFilterCondition(cond.Condition)}
 	case ">=":
 		return bson.M{"$gte": ConvertFilterCondition(cond.Condition)}
@@ -63,9 +66,6 @@ func ConvertFilterCondition(condition any) any {
 			return condition
 		}
 	default:
-		if fmt.Sprintf("%T", condition) == "[]string" {
-			return bson.M{"$in": condition}
-		}
 		return condition
 	}
 }
