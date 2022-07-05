@@ -236,11 +236,13 @@ func GetArrayValidations(api *Api) map[string]int8 {
 	for _, field := range validation {
 		if len(field.DenyRoleKeys) != 0 {
 			canSee := CheckRoles(field.DenyRoleKeys, userRole)
-			if canSee {
+			if canSee && field.Parent == "" {
 				fields[field.DbName] = 1
 			}
 		} else {
-			fields[field.DbName] = 1
+			if field.Parent == "" {
+				fields[field.DbName] = 1
+			}
 		}
 
 	}
