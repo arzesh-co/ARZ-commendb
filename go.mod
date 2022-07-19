@@ -1,4 +1,4 @@
-module github.com/arzesh-co/commendb
+module github.com/arzesh-co/commondb
 
 go 1.18
 
