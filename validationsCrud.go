@@ -57,6 +57,15 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 		}
 	}
 	for _, field := range validation.Validator {
+		isReqBody := false
+		for _, feature := range field.Features {
+			if feature == "10" {
+				isReqBody = true
+			}
+		}
+		if !isReqBody {
+			continue
+		}
 		if _, ok := value[field.DbName]; ok {
 			if len(field.DenyRoleKeys) != 0 && validation.SecurityLevel == "1" {
 				Response := GetErrors("REF.SERVICE_UNKNOWN_ERROR", api.Account, api.Lang, nil)
@@ -80,7 +89,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 								children[field.DbName] = field
 							} else {
 								if field.MultiLang {
-									for _, v := range value[field.DbName].(map[string]string) {
+									for _, v := range value[field.DbName].(map[string]any) {
 										validateErr := ValidationInput(v, validator.Rule, validator.Param, api.Account,
 											api.Lang, field.Title[api.Lang])
 										if validateErr != nil {
@@ -111,7 +120,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 							children[field.DbName] = field
 						} else {
 							if field.MultiLang {
-								for _, v := range value[field.DbName].(map[string]string) {
+								for _, v := range value[field.DbName].(map[string]any) {
 									validateErr := ValidationInput(v, validator.Rule, validator.Param, api.Account,
 										api.Lang, field.Title[api.Lang])
 									if validateErr != nil {

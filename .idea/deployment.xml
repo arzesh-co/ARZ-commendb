@@ -121,6 +121,13 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="ams_extensions">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="ams_goods">
         <serverdata>
           <mappings>
@@ -262,6 +269,13 @@
         </serverdata>
       </paths>
       <paths name="ams_vod">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="backups">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />

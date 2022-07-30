@@ -5,8 +5,46 @@ import (
 	validation2 "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"regexp"
+	"strconv"
 	"strings"
 )
+
+func ConvertAnyToInt(param any) int {
+	switch p := param.(type) {
+	case int:
+		return p
+	case string:
+		i, err := strconv.Atoi(p)
+		if err != nil {
+			return int(0)
+		}
+		return i
+	case float64:
+		return int(p)
+	case int64:
+		return int(p)
+	default:
+		return int(0)
+	}
+}
+func ConvertAnyToFloat64(param any) float64 {
+	switch p := param.(type) {
+	case float64:
+		return p
+	case string:
+		f, err := strconv.ParseFloat(p, 64)
+		if err != nil {
+			return float64(0)
+		}
+		return f
+	case int:
+		return float64(p)
+	case int64:
+		return float64(p)
+	default:
+		return float64(0)
+	}
+}
 
 func required(value interface{}, param any) error {
 	return validation2.Validate(value, validation2.Required)
@@ -19,24 +57,24 @@ func alphaNumeric(value interface{}, param any) error {
 	return nil
 }
 func minLen(value interface{}, param any) error {
-	err := validation2.Validate(value, validation2.Min(param))
+	err := validation2.Validate(value, validation2.Length(ConvertAnyToInt(param), 10000))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func maxLen(value interface{}, param any) error {
-	err := validation2.Validate(value, validation2.Max(param))
+	err := validation2.Validate(value, validation2.Length(0, ConvertAnyToInt(param)))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func minValue(value interface{}, param any) error {
-	return validation2.Validate(value, validation2.Min(param))
+	return validation2.Validate(value, validation2.Min(ConvertAnyToFloat64(param)))
 }
 func maxValue(value interface{}, param any) error {
-	return validation2.Validate(value, validation2.Max(param))
+	return validation2.Validate(value, validation2.Max(ConvertAnyToFloat64(param)))
 }
 func phone(value interface{}, param any) error {
 	err := validation2.Validate(value, validation2.Match(regexp.MustCompile("^\\+[1-9]{1}[0-9]{3,14}$")))
