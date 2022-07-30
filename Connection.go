@@ -69,7 +69,8 @@ type fieldsEntities struct {
 	DenyRoleKeys []string               `json:"deny_role_keys" bson:"deny_role_keys"`
 }
 type validation struct {
-	Validator []fieldsEntities `json:"validator"`
+	SecurityLevel string           `json:"security_level"`
+	Validator     []fieldsEntities `json:"validator"`
 }
 
 func getUserRole(user string, account string) ([]string, error) {
@@ -94,7 +95,7 @@ func getUserRole(user string, account string) ([]string, error) {
 	}
 	return userInfo.Data, nil
 }
-func getEndPointFileds(route string, method string, service string) ([]fieldsEntities, error) {
+func getEndPointFileds(route string, method string, service string) (*validation, error) {
 	req, err := http.NewRequest("GET", os.Getenv("coreApi")+"/api/core/endpoint/validators", nil)
 	if err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func getEndPointFileds(route string, method string, service string) ([]fieldsEnt
 	if err != nil {
 		return nil, err
 	}
-	return userInfo.Validator, nil
+	return userInfo, nil
 }
 
 type accountService struct {
