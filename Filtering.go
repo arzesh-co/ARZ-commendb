@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strconv"
 )
 
 type filter struct {
@@ -22,6 +23,14 @@ type aggregation struct {
 type sort struct {
 	DbName string `json:"db_name"`
 	Type   string `json:"type"`
+}
+type MongoPipeLine struct {
+	Filter      map[string]any
+	Sort        map[string]any
+	Aggregation map[string]any
+	Skip        string
+	Limit       string
+	Fields      map[string]int8
 }
 
 func createFilter(cond filter) interface{} {
@@ -124,4 +133,42 @@ func CreateSorting(sortString string) (map[string]any, error) {
 		}
 	}
 	return sortFilter, nil
+}
+func CreatePipeLineMongoAggregate(funcFilter bson.M, line *MongoPipeLine) ([]bson.M, any) {
+	var filterCount interface{}
+	Skip, err := strconv.ParseInt(line.Skip, 10, 64)
+	if err != nil {
+		Skip = 0
+	}
+	Limit, err := strconv.ParseInt(line.Limit, 10, 64)
+	if err != nil {
+		Limit = 10
+	}
+	if line.Filter != nil {
+		filterCount = bson.M{"$and": []interface{}{funcFilter, line.Filter}}
+	} else {
+		filterCount = funcFilter
+	}
+	var skipPage int64
+	if Skip != 0 {
+		skipPage = (Skip - 1) * Limit
+	} else {
+		skipPage = 0
+	}
+	pipe := []bson.M{{"$match": funcFilter}}
+	if line.Filter != nil {
+		pipe = append(pipe, bson.M{"$match": line.Filter})
+	}
+	if line.Fields != nil {
+		pipe = append(pipe, bson.M{"$project": line.Fields})
+	}
+	if line.Aggregation != nil {
+		pipe = append(pipe, bson.M{"$group": line.Aggregation})
+	}
+	if line.Sort != nil {
+		pipe = append(pipe, bson.M{"$sort": line.Sort})
+	}
+	pipe = append(pipe, bson.M{"$skip": skipPage})
+	pipe = append(pipe, bson.M{"$limit": Limit})
+	return pipe, filterCount
 }
