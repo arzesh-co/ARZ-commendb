@@ -47,7 +47,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 		return nil, errors
 	}
 	var userRole []string
-	if validation.SecurityLevel != "1" {
+	if validation.Meta.SecurityLevel != "1" {
 		userAccount := getCurrentAccount(api.Account, "user")
 		userRole, err = getUserRole(api.User, userAccount)
 		if err != nil {
@@ -67,7 +67,7 @@ func WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors) {
 			continue
 		}
 		if _, ok := value[field.DbName]; ok {
-			if len(field.DenyRoleKeys) != 0 && validation.SecurityLevel == "1" {
+			if len(field.DenyRoleKeys) != 0 && validation.Meta.SecurityLevel == "1" {
 				Response := GetErrors("REF.SERVICE_UNKNOWN_ERROR", api.Account, api.Lang, nil)
 				errors = append(errors, Response)
 				return nil, errors
