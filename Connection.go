@@ -76,7 +76,7 @@ type validation struct {
 }
 
 func getUserRole(user string, account string) ([]string, error) {
-	req, err := http.NewRequest("GET", os.Getenv("userApi")+"/api/user/uuid/"+user+"/roles", nil)
+	req, err := http.NewRequest("GET", os.Getenv("userApi")+"/api/user/users/uuid/"+user+"/roles", nil)
 	if err != nil {
 		return nil, err
 	}
