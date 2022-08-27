@@ -5,12 +5,15 @@ import (
 )
 
 type Api struct {
-	Route   string
-	Method  string
-	Service string
-	User    string
-	Account string
-	Lang    string
+	Route          string
+	Method         string
+	Service        string
+	User           string
+	Account        string
+	Lang           string
+	TraceId        string
+	SpanId         string
+	ServiceVersion string
 }
 
 func CheckRoles(endPointRoles, userRoles []string) bool {
