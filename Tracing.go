@@ -102,6 +102,6 @@ func (a *Api) CreateChildSpanWithTraceIdAndSpanId() (tr.Span, context.Context) {
 	requestContext := context.Background()
 	requestContext = tr.ContextWithSpanContext(requestContext, spanContext)
 	tracer := a.CreateNewTracer(a.ServiceVersion)
-	ctx, span := tracer.Start(requestContext, a.SpanId)
+	ctx, span := tracer.Start(requestContext, a.Route)
 	return span, ctx
 }
