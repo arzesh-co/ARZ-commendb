@@ -14,8 +14,9 @@ type filter struct {
 	Operation string
 }
 type aggregation struct {
-	GroupBy     string `json:"group_by"`
-	Aggregators []struct {
+	GroupBy      string `json:"group_by"`
+	GroupByTitle string `json:"group_by_title"`
+	Aggregators  []struct {
 		Aggregate string `json:"aggregate"`
 		Operation string `json:"operation"`
 	} `json:"aggregators"`
@@ -89,6 +90,7 @@ func CreateAggregation(aggr string) map[string]interface{} {
 		return nil
 	}
 	filter["_id"] = "$" + agg.GroupBy
+	filter["group_by_title"] = bson.M{"$first": "$" + agg.GroupByTitle}
 	for _, aggregator := range agg.Aggregators {
 		switch aggregator.Operation {
 		case "avg":
