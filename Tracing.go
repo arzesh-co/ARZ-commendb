@@ -87,11 +87,15 @@ func (a *Api) CreateChildSpanWithTraceIdAndSpanId() (tr.Span, context.Context) {
 	traceId, err := tr.TraceIDFromHex(a.TraceId)
 	if err != nil {
 		fmt.Println("trace id is not valid : ", err.Error())
+		tp := a.CreateNewTracer(a.ServiceVersion)
+		ctx, span := tp.Start(context.Background(), a.Route)
+		return span, ctx
 	}
 	var spanID tr.SpanID
 	spanID, err = tr.SpanIDFromHex(a.SpanId)
 	if err != nil {
 		fmt.Println("span id is not valid : ", err.Error())
+		return a.CreateSpanWithTraceId()
 	}
 	var spanContextConfig tr.SpanContextConfig
 	spanContextConfig.TraceID = traceId
