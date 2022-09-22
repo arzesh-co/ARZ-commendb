@@ -2,6 +2,8 @@ package CommenDb
 
 import (
 	"encoding/json"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -148,4 +150,99 @@ func getCurrentAccount(account string, service string) string {
 		return ""
 	}
 	return accountService.Account
+}
+
+type ResponseDomain struct {
+	Data []map[string]any `json:"data"`
+	Err  map[string]any   `json:"errors"`
+}
+
+func (a *Api) getDomainValuesDataByRefId(service, route string, refId []string,
+	MainField string, bodyFields []string) []map[string]any {
+	servicePort := os.Getenv(service + "Api")
+	req, err := http.NewRequest("GET", servicePort+route, nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("account_uuid", a.Account)
+	req.Header.Set("user_uuid", a.User)
+	filter := []bson.M{
+		{
+			"label":     "_id",
+			"operation": "Equal",
+			"condition": refId,
+		},
+	}
+	q := req.URL.Query()
+	q.Add("filter", fmt.Sprint(filter))
+	req.URL.RawQuery = q.Encode()
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil
+	}
+	domain := &ResponseDomain{}
+	err = json.Unmarshal(body, domain)
+	if err != nil {
+		return nil
+	}
+	if domain.Err != nil {
+		return nil
+	}
+	var Infos []map[string]any
+	for _, s := range refId {
+		for _, datum := range domain.Data {
+			mainId := FindValueInMap(datum, MainField)
+			if mainId == s {
+				info := make(map[string]any)
+				info[MainField] = mainId
+				for _, field := range bodyFields {
+					info[field] = datum[field]
+				}
+				Infos = append(Infos, info)
+			}
+		}
+	}
+	return Infos
+}
+func (a *Api) getDomainValuesDataByRefKey(keys []string) []map[string]any {
+	servicePort := os.Getenv("coreApi")
+	req, err := http.NewRequest("GET", servicePort+"/api/core/domains", nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("account_uuid", a.Account)
+	req.Header.Set("user_uuid", a.User)
+	filter := []bson.M{
+		{
+			"label":     "key",
+			"operation": "Equal",
+			"condition": keys,
+		},
+	}
+	q := req.URL.Query()
+	q.Add("filter", fmt.Sprint(filter))
+	req.URL.RawQuery = q.Encode()
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil
+	}
+	domain := &ResponseDomain{}
+	err = json.Unmarshal(body, domain)
+	if err != nil {
+		return nil
+	}
+	if domain.Err != nil {
+		return nil
+	}
+	return domain.Data
 }

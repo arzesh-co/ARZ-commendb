@@ -2,6 +2,7 @@ package CommenDb
 
 import (
 	"encoding/json"
+	"reflect"
 )
 
 type Api struct {
@@ -287,4 +288,175 @@ func GetArrayValidations(api *Api) map[string]int8 {
 
 	}
 	return fields
+}
+func IsSlice(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Slice
+}
+func (a *Api) FindDomainValues(data any) any {
+	if IsSlice(data) {
+		return a.FindDomainValuesInArray(data)
+	} else {
+		return a.FindDomainValuesInMap(data)
+	}
+}
+func FindValueInMap(mapInfo map[string]any, key string) any {
+	if value, found := mapInfo[key]; found {
+		return value
+	}
+	return nil
+}
+func SetDataToFieldOfArrayMap(mapInfos []map[string]any, key, MainField string, values []map[string]any) []map[string]any {
+	for _, info := range mapInfos {
+		if _, found := info[key]; found {
+			if IsSlice(info[key]) {
+				var newInfo []map[string]any
+				for _, s := range info[key].([]string) {
+					for _, value := range values {
+						if s == value[MainField] {
+							newInfo = append(newInfo, value)
+						}
+					}
+				}
+				info[key] = newInfo
+			} else {
+				for _, value := range values {
+					if info[key] == value[MainField] {
+						info[key] = value
+					}
+				}
+			}
+
+		}
+	}
+	return mapInfos
+}
+func SetDataToFieldOfMap(mapInfos map[string]any, key, MainField string, values []map[string]any) map[string]any {
+	if _, found := mapInfos[key]; found {
+		if IsSlice(mapInfos[key]) {
+			var newInfo []map[string]any
+			for _, s := range mapInfos[key].([]string) {
+				for _, value := range values {
+					if s == value[MainField] {
+						newInfo = append(newInfo, value)
+					}
+				}
+			}
+			mapInfos[key] = newInfo
+		} else {
+			for _, value := range values {
+				if mapInfos[key] == value[MainField] {
+					mapInfos[key] = value
+				}
+			}
+		}
+
+	}
+	return mapInfos
+}
+
+type DomainVal struct {
+	Ref   string
+	Value any
+}
+
+func (a *Api) FindDomainValuesInArray(data any) any {
+	var ArrData []map[string]any
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	err = json.Unmarshal(jsonData, &ArrData)
+	if err != nil {
+		return nil
+	}
+	endpointInfo, _ := getEndPointFileds(a.Route, a.Method, a.Service)
+	if endpointInfo == nil {
+		return data
+	}
+	for _, entity := range endpointInfo.Validator {
+		if entity.DisplayType == "combo" {
+			if domainType, found := entity.Conf["domain_type"]; found {
+				if domainType == "endpoint" {
+					var ArrayIds []string
+					service := FindValueInMap(entity.Conf, "service")
+					route := FindValueInMap(entity.Conf, "route")
+					fields := FindValueInMap(entity.Conf, "fields")
+					MainField := FindValueInMap(entity.Conf, "main_field")
+					for _, data := range ArrData {
+						id := FindValueInMap(data, entity.DbName)
+						if IsSlice(id) {
+							ArrayIds = append(ArrayIds, id.([]string)...)
+						} else {
+							ArrayIds = append(ArrayIds, id.(string))
+						}
+					}
+					values := a.getDomainValuesDataByRefId(service.(string), route.(string),
+						ArrayIds, MainField.(string), fields.([]string))
+					ArrData = SetDataToFieldOfArrayMap(ArrData, entity.DbName, MainField.(string), values)
+				} else if domainType == "domain_key" {
+					var ArrayKeys []string
+					for _, data := range ArrData {
+						key := FindValueInMap(data, entity.DbName)
+						if IsSlice(key) {
+							ArrayKeys = append(ArrayKeys, key.([]string)...)
+						} else {
+							ArrayKeys = append(ArrayKeys, key.(string))
+						}
+					}
+					values := a.getDomainValuesDataByRefKey(ArrayKeys)
+					ArrData = SetDataToFieldOfArrayMap(ArrData, entity.DbName, "key", values)
+				}
+			}
+		}
+	}
+	return ArrData
+}
+func (a *Api) FindDomainValuesInMap(data any) any {
+	var MapData map[string]any
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	err = json.Unmarshal(jsonData, &MapData)
+	if err != nil {
+		return nil
+	}
+	endpointInfo, _ := getEndPointFileds(a.Route, a.Method, a.Service)
+	if endpointInfo == nil {
+		return data
+	}
+	for _, entity := range endpointInfo.Validator {
+		if entity.DisplayType == "combo" {
+			if domainType, found := entity.Conf["domain_type"]; found {
+				if domainType == "endpoint" {
+					var ArrayIds []string
+					service := FindValueInMap(entity.Conf, "service")
+					route := FindValueInMap(entity.Conf, "route")
+					fields := FindValueInMap(entity.Conf, "fields")
+					MainField := FindValueInMap(entity.Conf, "main_field")
+					id := FindValueInMap(MapData, entity.DbName)
+					if IsSlice(id) {
+						ArrayIds = append(ArrayIds, id.([]string)...)
+					} else {
+						ArrayIds = append(ArrayIds, id.(string))
+					}
+					values := a.getDomainValuesDataByRefId(service.(string), route.(string),
+						ArrayIds, MainField.(string), fields.([]string))
+					MapData = SetDataToFieldOfMap(MapData, entity.DbName, MainField.(string), values)
+				} else if domainType == "domain_key" {
+					var ArrayKeys []string
+					key := FindValueInMap(MapData, entity.DbName)
+					if IsSlice(key) {
+						ArrayKeys = append(ArrayKeys, key.([]string)...)
+					} else {
+						ArrayKeys = append(ArrayKeys, key.(string))
+					}
+					values := a.getDomainValuesDataByRefKey(ArrayKeys)
+					MapData = SetDataToFieldOfMap(MapData, entity.DbName, "key", values)
+				}
+
+			}
+		}
+	}
+	return MapData
 }
