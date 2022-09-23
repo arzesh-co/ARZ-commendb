@@ -209,24 +209,22 @@ func (a *Api) getDomainValuesDataByRefId(service, route string, refId []string,
 	}
 	return Infos
 }
-func (a *Api) getDomainValuesDataByRefKey(keys []string) []map[string]any {
+
+type DomainValueResponse struct {
+	Data struct {
+		Value []map[string]any `json:"values"`
+	} `json:"data"`
+	Err map[string]any `json:"errors"`
+}
+
+func (a *Api) getDomainValuesDataByRefKey(key string) []map[string]any {
 	servicePort := os.Getenv("coreApi")
-	req, err := http.NewRequest("GET", servicePort+"/api/core/domains", nil)
+	req, err := http.NewRequest("GET", servicePort+"/api/core/domains/key/"+key, nil)
 	if err != nil {
 		return nil
 	}
 	req.Header.Set("account_uuid", a.Account)
 	req.Header.Set("user_uuid", a.User)
-	filter := []bson.M{
-		{
-			"label":     "key",
-			"operation": "Equal",
-			"condition": keys,
-		},
-	}
-	q := req.URL.Query()
-	q.Add("filter", fmt.Sprint(filter))
-	req.URL.RawQuery = q.Encode()
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -236,7 +234,7 @@ func (a *Api) getDomainValuesDataByRefKey(keys []string) []map[string]any {
 	if err != nil {
 		return nil
 	}
-	domain := &ResponseDomain{}
+	domain := &DomainValueResponse{}
 	err = json.Unmarshal(body, domain)
 	if err != nil {
 		return nil
@@ -244,5 +242,5 @@ func (a *Api) getDomainValuesDataByRefKey(keys []string) []map[string]any {
 	if domain.Err != nil {
 		return nil
 	}
-	return domain.Data
+	return domain.Data.Value
 }

@@ -3,6 +3,7 @@ package CommenDb
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 )
 
 type Api struct {
@@ -300,56 +301,48 @@ func (a *Api) FindDomainValues(data any) any {
 	}
 }
 func FindValueInMap(mapInfo map[string]any, key string) any {
-	if value, found := mapInfo[key]; found {
-		return value
+	splitKey := strings.Split(key, ".")
+	if len(splitKey) > 1 {
+		if value, found := mapInfo[splitKey[0]]; found {
+			splitKey = splitKey[1:]
+			return FindValueInMap(value.(map[string]any), strings.Join(splitKey, "."))
+		}
+	} else {
+		if value, found := mapInfo[key]; found {
+			return value
+		}
 	}
 	return nil
 }
-func SetDataToFieldOfArrayMap(mapInfos []map[string]any, key, MainField string, values []map[string]any) []map[string]any {
-	for _, info := range mapInfos {
-		if _, found := info[key]; found {
-			if IsSlice(info[key]) {
+func SetDataToFieldOfMap(mapInfos map[string]any, key, MainField string, values []map[string]any) map[string]any {
+	splitKey := strings.Split(key, ".")
+	if len(splitKey) > 1 {
+		if _, found := mapInfos[splitKey[0]]; found {
+			parentKey := splitKey[0]
+			splitKey = splitKey[1:]
+			mapInfos[parentKey] = SetDataToFieldOfMap(mapInfos[parentKey].(map[string]any), strings.Join(splitKey, "."), MainField, values)
+		}
+	} else {
+		if _, found := mapInfos[key]; found {
+			if IsSlice(mapInfos[key]) {
 				var newInfo []map[string]any
-				for _, s := range info[key].([]string) {
+				for _, s := range mapInfos[key].([]string) {
 					for _, value := range values {
 						if s == value[MainField] {
 							newInfo = append(newInfo, value)
 						}
 					}
 				}
-				info[key] = newInfo
+				mapInfos[key] = newInfo
 			} else {
 				for _, value := range values {
-					if info[key] == value[MainField] {
-						info[key] = value
+					if mapInfos[key] == value[MainField] {
+						mapInfos[key] = value
 					}
 				}
 			}
 
 		}
-	}
-	return mapInfos
-}
-func SetDataToFieldOfMap(mapInfos map[string]any, key, MainField string, values []map[string]any) map[string]any {
-	if _, found := mapInfos[key]; found {
-		if IsSlice(mapInfos[key]) {
-			var newInfo []map[string]any
-			for _, s := range mapInfos[key].([]string) {
-				for _, value := range values {
-					if s == value[MainField] {
-						newInfo = append(newInfo, value)
-					}
-				}
-			}
-			mapInfos[key] = newInfo
-		} else {
-			for _, value := range values {
-				if mapInfos[key] == value[MainField] {
-					mapInfos[key] = value
-				}
-			}
-		}
-
 	}
 	return mapInfos
 }
@@ -392,7 +385,9 @@ func (a *Api) FindDomainValuesInArray(data any) any {
 					}
 					values := a.getDomainValuesDataByRefId(service.(string), route.(string),
 						ArrayIds, MainField.(string), fields.([]string))
-					ArrData = SetDataToFieldOfArrayMap(ArrData, entity.DbName, MainField.(string), values)
+					for i, _ := range ArrData {
+						ArrData[i] = SetDataToFieldOfMap(ArrData[i], entity.DbName, MainField.(string), values)
+					}
 				} else if domainType == "domain_key" {
 					var ArrayKeys []string
 					for _, data := range ArrData {
@@ -403,13 +398,18 @@ func (a *Api) FindDomainValuesInArray(data any) any {
 							ArrayKeys = append(ArrayKeys, key.(string))
 						}
 					}
-					values := a.getDomainValuesDataByRefKey(ArrayKeys)
-					ArrData = SetDataToFieldOfArrayMap(ArrData, entity.DbName, "key", values)
+					values := a.getDomainValuesDataByRefKey(entity.Conf["domain_key"].(string))
+					for i, _ := range ArrData {
+						ArrData[i] = SetDataToFieldOfMap(ArrData[i], entity.DbName, "code", values)
+					}
 				}
 			}
 		}
 	}
 	return ArrData
+}
+func (a Api) SetDomainValueByDomainKey() {
+
 }
 func (a *Api) FindDomainValuesInMap(data any) any {
 	var MapData map[string]any
@@ -451,7 +451,7 @@ func (a *Api) FindDomainValuesInMap(data any) any {
 					} else {
 						ArrayKeys = append(ArrayKeys, key.(string))
 					}
-					values := a.getDomainValuesDataByRefKey(ArrayKeys)
+					values := a.getDomainValuesDataByRefKey(entity.Conf["domain_key"].(string))
 					MapData = SetDataToFieldOfMap(MapData, entity.DbName, "key", values)
 				}
 
