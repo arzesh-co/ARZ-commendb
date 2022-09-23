@@ -2,7 +2,6 @@ package CommenDb
 
 import (
 	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"net/http"
@@ -157,24 +156,25 @@ type ResponseDomain struct {
 	Err  map[string]any   `json:"errors"`
 }
 
-func (a *Api) getDomainValuesDataByRefId(service, route string, refId []string,
-	MainField string, bodyFields []string) []map[string]any {
+func (a *Api) getDomainValuesDataByRefId(service, route string, refId []any,
+	MainField string, bodyFields []any) []map[string]any {
+	ServiceAccount := getCurrentAccount(a.Account, service)
 	servicePort := os.Getenv(service + "Api")
 	req, err := http.NewRequest("GET", servicePort+route, nil)
 	if err != nil {
 		return nil
 	}
-	req.Header.Set("account_uuid", a.Account)
+	req.Header.Set("account_uuid", ServiceAccount)
 	req.Header.Set("user_uuid", a.User)
-	filter := []bson.M{
-		{
-			"label":     "_id",
-			"operation": "Equal",
-			"condition": refId,
-		},
-	}
+	var Apifilter []bson.M
+	Apifilter = append(Apifilter, bson.M{
+		"label":     MainField,
+		"operation": "Equal",
+		"condition": refId,
+	})
+	jsonF, _ := json.Marshal(Apifilter)
 	q := req.URL.Query()
-	q.Add("filter", fmt.Sprint(filter))
+	q.Add("filter", string(jsonF))
 	req.URL.RawQuery = q.Encode()
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -201,7 +201,7 @@ func (a *Api) getDomainValuesDataByRefId(service, route string, refId []string,
 				info := make(map[string]any)
 				info[MainField] = mainId
 				for _, field := range bodyFields {
-					info[field] = datum[field]
+					info[field.(string)] = datum[field.(string)]
 				}
 				Infos = append(Infos, info)
 			}

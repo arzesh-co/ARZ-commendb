@@ -305,6 +305,18 @@ func FindValueInMap(mapInfo map[string]any, key string) any {
 	if len(splitKey) > 1 {
 		if value, found := mapInfo[splitKey[0]]; found {
 			splitKey = splitKey[1:]
+			if IsSlice(value) {
+				var slice []any
+				for _, a := range value.([]any) {
+					values := FindValueInMap(a.(map[string]any), strings.Join(splitKey, "."))
+					if IsSlice(values) {
+						slice = append(slice, values.([]any)...)
+					} else {
+						slice = append(slice, values.(string))
+					}
+				}
+				return slice
+			}
 			return FindValueInMap(value.(map[string]any), strings.Join(splitKey, "."))
 		}
 	} else {
@@ -320,13 +332,19 @@ func SetDataToFieldOfMap(mapInfos map[string]any, key, MainField string, values 
 		if _, found := mapInfos[splitKey[0]]; found {
 			parentKey := splitKey[0]
 			splitKey = splitKey[1:]
-			mapInfos[parentKey] = SetDataToFieldOfMap(mapInfos[parentKey].(map[string]any), strings.Join(splitKey, "."), MainField, values)
+			if IsSlice(mapInfos[parentKey]) {
+				for i, _ := range mapInfos[parentKey].([]any) {
+					mapInfos[parentKey].([]any)[i] = SetDataToFieldOfMap(mapInfos[parentKey].([]any)[i].(map[string]any), strings.Join(splitKey, "."), MainField, values)
+				}
+			} else {
+				mapInfos[parentKey] = SetDataToFieldOfMap(mapInfos[parentKey].(map[string]any), strings.Join(splitKey, "."), MainField, values)
+			}
 		}
 	} else {
 		if _, found := mapInfos[key]; found {
 			if IsSlice(mapInfos[key]) {
 				var newInfo []map[string]any
-				for _, s := range mapInfos[key].([]string) {
+				for _, s := range mapInfos[key].([]any) {
 					for _, value := range values {
 						if s == value[MainField] {
 							newInfo = append(newInfo, value)
@@ -370,7 +388,7 @@ func (a *Api) FindDomainValuesInArray(data any) any {
 		if entity.DisplayType == "combo" {
 			if domainType, found := entity.Conf["domain_type"]; found {
 				if domainType == "endpoint" {
-					var ArrayIds []string
+					var ArrayIds []any
 					service := FindValueInMap(entity.Conf, "service")
 					route := FindValueInMap(entity.Conf, "route")
 					fields := FindValueInMap(entity.Conf, "fields")
@@ -378,24 +396,26 @@ func (a *Api) FindDomainValuesInArray(data any) any {
 					for _, data := range ArrData {
 						id := FindValueInMap(data, entity.DbName)
 						if IsSlice(id) {
-							ArrayIds = append(ArrayIds, id.([]string)...)
+							ArrayIds = append(ArrayIds, id.([]any)...)
 						} else {
 							ArrayIds = append(ArrayIds, id.(string))
 						}
 					}
 					values := a.getDomainValuesDataByRefId(service.(string), route.(string),
-						ArrayIds, MainField.(string), fields.([]string))
+						ArrayIds, MainField.(string), fields.([]any))
 					for i, _ := range ArrData {
 						ArrData[i] = SetDataToFieldOfMap(ArrData[i], entity.DbName, MainField.(string), values)
 					}
 				} else if domainType == "domain_key" {
-					var ArrayKeys []string
+					var ArrayKeys []any
 					for _, data := range ArrData {
 						key := FindValueInMap(data, entity.DbName)
-						if IsSlice(key) {
-							ArrayKeys = append(ArrayKeys, key.([]string)...)
-						} else {
-							ArrayKeys = append(ArrayKeys, key.(string))
+						if key != nil {
+							if IsSlice(key) {
+								ArrayKeys = append(ArrayKeys, key.([]any)...)
+							} else {
+								ArrayKeys = append(ArrayKeys, key.(string))
+							}
 						}
 					}
 					values := a.getDomainValuesDataByRefKey(entity.Conf["domain_key"].(string))
@@ -407,9 +427,6 @@ func (a *Api) FindDomainValuesInArray(data any) any {
 		}
 	}
 	return ArrData
-}
-func (a Api) SetDomainValueByDomainKey() {
-
 }
 func (a *Api) FindDomainValuesInMap(data any) any {
 	var MapData map[string]any
@@ -429,19 +446,19 @@ func (a *Api) FindDomainValuesInMap(data any) any {
 		if entity.DisplayType == "combo" {
 			if domainType, found := entity.Conf["domain_type"]; found {
 				if domainType == "endpoint" {
-					var ArrayIds []string
+					var ArrayIds []any
 					service := FindValueInMap(entity.Conf, "service")
 					route := FindValueInMap(entity.Conf, "route")
 					fields := FindValueInMap(entity.Conf, "fields")
 					MainField := FindValueInMap(entity.Conf, "main_field")
 					id := FindValueInMap(MapData, entity.DbName)
 					if IsSlice(id) {
-						ArrayIds = append(ArrayIds, id.([]string)...)
+						ArrayIds = append(ArrayIds, id.([]any)...)
 					} else {
 						ArrayIds = append(ArrayIds, id.(string))
 					}
 					values := a.getDomainValuesDataByRefId(service.(string), route.(string),
-						ArrayIds, MainField.(string), fields.([]string))
+						ArrayIds, MainField.(string), fields.([]any))
 					MapData = SetDataToFieldOfMap(MapData, entity.DbName, MainField.(string), values)
 				} else if domainType == "domain_key" {
 					var ArrayKeys []string
