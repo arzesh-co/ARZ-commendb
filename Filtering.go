@@ -36,6 +36,8 @@ type MongoPipeLine struct {
 
 func createFilter(cond filter) interface{} {
 	switch cond.Operation {
+	case "text":
+		return bson.M{"$text": bson.M{"$search": cond.Condition.(string)}}
 	case "Start With":
 		return primitive.Regex{Pattern: "^" + cond.Condition.(string) + ".", Options: "i"}
 	case "End With":
