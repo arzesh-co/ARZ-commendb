@@ -16,6 +16,7 @@ type Api struct {
 	TraceId        string
 	SpanId         string
 	ServiceVersion string
+	Context        map[string]any
 }
 
 func CheckRoles(endPointRoles, userRoles []string) bool {
