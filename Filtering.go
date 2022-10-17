@@ -160,16 +160,16 @@ func CreatePipeLineMongoAggregate(funcFilter bson.M, line *MongoPipeLine) ([]bso
 		skipPage = 0
 	}
 	pipe := []bson.M{{"$match": funcFilter}}
-	if line.Filter != nil {
+	if len(line.Filter) != 0 {
 		pipe = append(pipe, bson.M{"$match": line.Filter})
 	}
-	if line.Fields != nil {
+	if len(line.Fields) != 0 {
 		pipe = append(pipe, bson.M{"$project": line.Fields})
 	}
-	if line.Aggregation != nil {
+	if len(line.Aggregation) != 0 {
 		pipe = append(pipe, bson.M{"$group": line.Aggregation})
 	}
-	if line.Sort != nil {
+	if len(line.Sort) != 0 {
 		pipe = append(pipe, bson.M{"$sort": line.Sort})
 	}
 	pipe = append(pipe, bson.M{"$skip": skipPage})
