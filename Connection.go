@@ -2,6 +2,7 @@ package CommenDb
 
 import (
 	"encoding/json"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"net/http"
@@ -32,7 +33,9 @@ func getError(key string, account string, lang string, params map[string]string)
 	paramsS, _ := json.Marshal(params)
 	q.Add("params", string(paramsS))
 	req.URL.RawQuery = q.Encode()
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -82,9 +85,12 @@ func getUserRole(user string, account string) ([]string, error) {
 		return nil, err
 	}
 	req.Header.Set("account_uuid", account)
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(res.Body)
@@ -108,9 +114,12 @@ func getEndPointFileds(route string, method string, service string) (*validation
 	q.Add("route", route)
 	q.Add("method", method)
 	req.URL.RawQuery = q.Encode()
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(res.Body)
@@ -134,9 +143,12 @@ func getCurrentAccount(account string, service string) string {
 	if err != nil {
 		return ""
 	}
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return ""
 	}
 	body, err := ioutil.ReadAll(res.Body)
@@ -176,9 +188,12 @@ func (a *Api) getDomainValuesDataByRefId(service, route string, refId []any,
 	q := req.URL.Query()
 	q.Add("filter", string(jsonF))
 	req.URL.RawQuery = q.Encode()
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil
 	}
 	body, err := ioutil.ReadAll(res.Body)
@@ -225,9 +240,12 @@ func (a *Api) getDomainValuesDataByRefKey(key string) []map[string]any {
 	}
 	req.Header.Set("account_uuid", a.Account)
 	req.Header.Set("user_uuid", a.User)
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
 	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil
 	}
 	body, err := ioutil.ReadAll(res.Body)
