@@ -181,7 +181,7 @@ func (a *Api) getDomainValuesDataByRefId(service, route string, refId []any,
 	var Apifilter []bson.M
 	Apifilter = append(Apifilter, bson.M{
 		"label":     MainField,
-		"operation": "Equal",
+		"operation": "=",
 		"condition": refId,
 	})
 	jsonF, _ := json.Marshal(Apifilter)
