@@ -105,6 +105,8 @@ func CreateAggregation(aggr string) map[string]interface{} {
 			filter[aggregator.Aggregate] = bson.M{"$min": "$" + aggregator.Aggregate}
 		case "max":
 			filter[aggregator.Aggregate] = bson.M{"$max": "$" + aggregator.Aggregate}
+		case "first":
+			filter[aggregator.Aggregate] = bson.M{"$first": "$" + aggregator.Aggregate}
 		}
 	}
 	return filter
