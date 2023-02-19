@@ -63,6 +63,8 @@ func createFilter(cond filter) interface{} {
 		return bson.M{"$gt": ConvertFilterCondition(cond.Condition)}
 	case "<":
 		return bson.M{"$lt": ConvertFilterCondition(cond.Condition)}
+	case "!=":
+		return bson.M{"$ne": ConvertFilterCondition(cond.Condition)}
 	}
 	return bson.M{}
 }
