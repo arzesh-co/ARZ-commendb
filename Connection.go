@@ -187,6 +187,7 @@ func (a *Api) getDomainValuesDataByRefId(service, route string, refId []any,
 	jsonF, _ := json.Marshal(Apifilter)
 	q := req.URL.Query()
 	q.Add("filter", string(jsonF))
+	q.Add("limit", "100")
 	req.URL.RawQuery = q.Encode()
 	client := &http.Client{
 		Transport: &http.Transport{},
