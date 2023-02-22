@@ -120,9 +120,17 @@ func CreateFilter(filterString string) (map[string]any, error) {
 		return nil, err
 	}
 	clintFilterMap := make(map[string]any)
-	for _, f := range filters {
-		clintFilterMap[f.Label] = createFilter(f)
+	if len(filters) > 1 {
+		listCondition := make([]map[string]any, len(filters))
+		for i, f := range filters {
+			condition := make(map[string]any)
+			condition[f.Label] = createFilter(f)
+			listCondition[i] = condition
+		}
+		clintFilterMap["$and"] = listCondition
+		return clintFilterMap, nil
 	}
+	clintFilterMap[filters[0].Label] = createFilter(filters[0])
 	return clintFilterMap, nil
 }
 func CreateSorting(sortString string) (map[string]any, error) {
