@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func (a *Api) GetErrors(key string, account string, lang string, params map[string]string) *ResponseErrors {
-	res := a.getError(key, account, lang, params)
+func GetErrors(key string, account string, lang string, params map[string]string) *ResponseErrors {
+	res := getError(key, account, lang, params)
 	if res == nil {
 		return nil
 	}

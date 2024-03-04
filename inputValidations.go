@@ -136,7 +136,7 @@ func setValidate() map[string]func(value interface{}, param any) error {
 	m["float"] = float
 	return m
 }
-func (a *Api) ValidationArrayOfObjInput(values []map[string]any, dbName string, validate string, param any,
+func ValidationArrayOfObjInput(values []map[string]any, dbName string, validate string, param any,
 	account string, lang string, title string) *ResponseErrors {
 	funcs := setValidate()
 	titleParam := make(map[string]string)
@@ -148,7 +148,7 @@ func (a *Api) ValidationArrayOfObjInput(values []map[string]any, dbName string, 
 		for _, value := range values {
 			err := funcs[validate](value[field[1]], param)
 			if err != nil {
-				NewErr := a.GetErrors(validate, account, lang, titleParam)
+				NewErr := GetErrors(validate, account, lang, titleParam)
 				NewErr.MetaData = meta
 				return NewErr
 			}
@@ -156,7 +156,7 @@ func (a *Api) ValidationArrayOfObjInput(values []map[string]any, dbName string, 
 	}
 	return nil
 }
-func (a *Api) ValidationObjInput(values map[string]any, dbName string, validate string, param any,
+func ValidationObjInput(values map[string]any, dbName string, validate string, param any,
 	account string, lang string, title string) *ResponseErrors {
 	funcs := setValidate()
 	titleParam := make(map[string]string)
@@ -167,7 +167,7 @@ func (a *Api) ValidationObjInput(values map[string]any, dbName string, validate 
 	if len(field) > 1 {
 		err := funcs[validate](values[field[1]], param)
 		if err != nil {
-			NewErr := a.GetErrors(validate, account, lang, titleParam)
+			NewErr := GetErrors(validate, account, lang, titleParam)
 			NewErr.MetaData = meta
 			return NewErr
 		}
@@ -175,7 +175,7 @@ func (a *Api) ValidationObjInput(values map[string]any, dbName string, validate 
 	}
 	return nil
 }
-func (a *Api) ValidationArray(values []any, validate string, param any,
+func ValidationArray(values []any, validate string, param any,
 	account string, lang string, title string) *ResponseErrors {
 	funcs := setValidate()
 	titleParam := make(map[string]string)
@@ -183,21 +183,21 @@ func (a *Api) ValidationArray(values []any, validate string, param any,
 	for _, value := range values {
 		err := funcs[validate](value, param)
 		if err != nil {
-			NewErr := a.GetErrors(validate, account, lang, titleParam)
+			NewErr := GetErrors(validate, account, lang, titleParam)
 			return NewErr
 		}
 	}
 	return nil
 }
 
-func (a *Api) ValidationInput(value interface{}, validate string, param any,
+func ValidationInput(value interface{}, validate string, param any,
 	account string, lang string, title string) *ResponseErrors {
 	funcs := setValidate()
 	titleParam := make(map[string]string)
 	titleParam["$information$"] = title
 	err := funcs[validate](value, param)
 	if err != nil {
-		return a.GetErrors(validate, account, lang, titleParam)
+		return GetErrors(validate, account, lang, titleParam)
 	}
 	return nil
 }

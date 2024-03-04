@@ -22,7 +22,7 @@ type ResponseErrors struct {
 	MetaData  map[string]any `json:"meta_data"`
 }
 
-func (a *Api) getError(key string, account string, lang string, params map[string]string) *ResponseErrors {
+func getError(key string, account string, lang string, params map[string]string) *ResponseErrors {
 
 	Error := FindError(key)
 

@@ -41,7 +41,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 	children := make(map[string]fieldsEntities)
 	err := json.Unmarshal(data, &value)
 	if err != nil {
-		Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+		Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 		Err := make(map[string]any)
 		Err["validation"] = err.Error()
 		Response.MetaData = Err
@@ -50,7 +50,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 	}
 	validation, err := a.getEndPointFileds(api.Route, api.Method, api.Service)
 	if err != nil {
-		Response := a.GetErrors("REF.CANNOT_INSERT", api.Account, api.Lang, nil)
+		Response := GetErrors("REF.CANNOT_INSERT", api.Account, api.Lang, nil)
 		errors = append(errors, Response)
 		return nil, errors
 	}
@@ -59,7 +59,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 		userAccount := a.GetCurrentAccount(api.Account, "user")
 		userRole, err = a.getUserRole(api.User, userAccount)
 		if err != nil {
-			Response := a.GetErrors("REF.CANNOT_ACCESS", api.Account, api.Lang, nil)
+			Response := GetErrors("REF.CANNOT_ACCESS", api.Account, api.Lang, nil)
 			errors = append(errors, Response)
 			return nil, errors
 		}
@@ -76,7 +76,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 		}
 		if _, ok := value[field.DbName]; ok {
 			if len(field.DenyRoleKeys) != 0 && validation.Meta.SecurityLevel == "1" {
-				Response := a.GetErrors("REF.SERVICE_UNKNOWN_ERROR", api.Account, api.Lang, nil)
+				Response := GetErrors("REF.SERVICE_UNKNOWN_ERROR", api.Account, api.Lang, nil)
 				errors = append(errors, Response)
 				return nil, errors
 			}
@@ -98,14 +98,14 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 							} else {
 								if field.MultiLang {
 									for _, v := range value[field.DbName].(map[string]any) {
-										validateErr := a.ValidationInput(v, validator.Rule, validator.Param, api.Account,
+										validateErr := ValidationInput(v, validator.Rule, validator.Param, api.Account,
 											api.Lang, field.Title[api.Lang])
 										if validateErr != nil {
 											errors = append(errors, validateErr)
 										}
 									}
 								} else {
-									validateErr := a.ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+									validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
 										api.Lang, field.Title[api.Lang])
 									if validateErr != nil {
 										errors = append(errors, validateErr)
@@ -129,14 +129,14 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 						} else {
 							if field.MultiLang {
 								for _, v := range value[field.DbName].(map[string]any) {
-									validateErr := a.ValidationInput(v, validator.Rule, validator.Param, api.Account,
+									validateErr := ValidationInput(v, validator.Rule, validator.Param, api.Account,
 										api.Lang, field.Title[api.Lang])
 									if validateErr != nil {
 										errors = append(errors, validateErr)
 									}
 								}
 							} else {
-								validateErr := a.ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
+								validateErr := ValidationInput(value[field.DbName], validator.Rule, validator.Param, api.Account,
 									api.Lang, field.Title[api.Lang])
 								if validateErr != nil {
 									errors = append(errors, validateErr)
@@ -154,7 +154,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 					canSet := CheckRoles(field.DenyRoleKeys, userRole)
 					for _, validator := range field.Validators {
 						if validator.Rule == "required" && canSet {
-							validateErr := a.ValidationInput(nil, validator.Rule, validator.Param, api.Account,
+							validateErr := ValidationInput(nil, validator.Rule, validator.Param, api.Account,
 								api.Lang, field.Title[api.Lang])
 							if validateErr != nil {
 								errors = append(errors, validateErr)
@@ -173,7 +173,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 			var parent []map[string]any
 			arrayMap, err := json.Marshal(value[element.Parent])
 			if err != nil {
-				Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+				Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 				Err := make(map[string]any)
 				Err["validation"] = err.Error()
 				Response.MetaData = Err
@@ -182,7 +182,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 			}
 			err = json.Unmarshal(arrayMap, &parent)
 			if err != nil {
-				Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+				Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 				Err := make(map[string]any)
 				Err["validation"] = err.Error()
 				Response.MetaData = Err
@@ -190,7 +190,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 				return nil, errors
 			}
 			for _, validator := range element.Validators {
-				validateErr := a.ValidationArrayOfObjInput(parent, element.DbName, validator.Rule, validator.Param, api.Account,
+				validateErr := ValidationArrayOfObjInput(parent, element.DbName, validator.Rule, validator.Param, api.Account,
 					api.Lang, element.Title[api.Lang])
 				if validateErr != nil {
 					errors = append(errors, validateErr)
@@ -200,7 +200,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 			parent := make(map[string]any)
 			arrayMap, err := json.Marshal(value[element.Parent])
 			if err != nil {
-				Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+				Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 				Err := make(map[string]any)
 				Err["validation"] = err.Error()
 				Response.MetaData = Err
@@ -209,7 +209,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 			}
 			err = json.Unmarshal(arrayMap, &parent)
 			if err != nil {
-				Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+				Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 				Err := make(map[string]any)
 				Err["validation"] = err.Error()
 				Response.MetaData = Err
@@ -217,7 +217,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 				return nil, errors
 			}
 			for _, validator := range element.Validators {
-				validateErr := a.ValidationObjInput(value[element.Parent].(map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
+				validateErr := ValidationObjInput(value[element.Parent].(map[string]any), element.DbName, validator.Rule, validator.Param, api.Account,
 					api.Lang, element.Title[api.Lang])
 				if validateErr != nil {
 					errors = append(errors, validateErr)
@@ -227,7 +227,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 	}
 	for _, element := range arrayFields {
 		for _, validator := range element.Validators {
-			validateErr := a.ValidationArray(value[element.DbName].([]any), validator.Rule, validator.Param, api.Account,
+			validateErr := ValidationArray(value[element.DbName].([]any), validator.Rule, validator.Param, api.Account,
 				api.Lang, element.Title[api.Lang])
 			if validateErr != nil {
 				errors = append(errors, validateErr)
@@ -236,7 +236,7 @@ func (a *Api) WriteValidations(data []byte, api *Api) ([]byte, []*ResponseErrors
 	}
 	body, err := json.Marshal(value)
 	if err != nil {
-		Response := a.GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
+		Response := GetErrors("REF.INVALIDATION_ERROR", api.Account, api.Lang, nil)
 		Err := make(map[string]any)
 		Err["validation"] = err.Error()
 		Response.MetaData = Err
