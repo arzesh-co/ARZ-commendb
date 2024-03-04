@@ -2,6 +2,10 @@ package CommenDb
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"strings"
 )
 
@@ -1107,7 +1111,7 @@ type Entities struct {
 func FindError(key string) *Errors {
 	strErr, ok := ErrorKeyMap[key]
 	if !ok {
-		return nil
+		return GetCustomErrorService(key)
 	}
 
 	Err := &Errors{}
@@ -1142,4 +1146,44 @@ func setParamsToResponseErr(res *ResponseErrors, DefaultParams []ErrorParam, par
 		res.Detail = strings.Replace(res.Detail, p.Key, paramVal, -1)
 	}
 	return res
+}
+
+type Param struct {
+	Key     string            `json:"key" bson:"key"`
+	Default map[string]string `json:"default" bson:"default"`
+}
+
+type ResErrorService struct {
+	Data *Errors `json:"data"`
+}
+
+func GetCustomErrorService(errorKey string) *Errors {
+	req, err := http.NewRequest("GET", os.Getenv("error_handling")+"/api/error-handling/errors/key/:key", nil)
+	if err != nil {
+		return nil
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{},
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println("error is :", err.Error())
+		return nil
+	}
+	req.Close = true
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println("error is :", err.Error())
+		return nil
+	}
+
+	Info := &ResErrorService{}
+	err = json.Unmarshal(body, Info)
+	if err != nil {
+		fmt.Println("error is :", err.Error())
+		return nil
+	}
+
+	return Info.Data
 }
