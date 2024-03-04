@@ -22,34 +22,14 @@ type ResponseErrors struct {
 	MetaData  map[string]any `json:"meta_data"`
 }
 
-func getError(key string, account string, lang string, params map[string]string) *ResponseErrors {
-	req, err := http.NewRequest("GET", os.Getenv("coreApi")+"/api/core/errors/key/"+key, nil)
-	if err != nil {
-		return nil
-	}
-	req.Header.Set("account_uuid", account)
-	q := req.URL.Query()
-	q.Add("lang", lang)
-	paramsS, _ := json.Marshal(params)
-	q.Add("params", string(paramsS))
-	req.URL.RawQuery = q.Encode()
-	client := &http.Client{
-		Transport: &http.Transport{},
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil
-	}
-	Info := &ResponseErrors{}
-	err = json.Unmarshal(body, Info)
-	if err != nil {
-		return nil
-	}
-	return Info
+func (a *Api) getError(key string, account string, lang string, params map[string]string) *ResponseErrors {
+
+	Error := FindError(key)
+
+	ResErr := convertErrorToResponseErr(Error, lang)
+
+	ResErr = setParamsToResponseErr(ResErr, Error.Params, params, lang)
+	return ResErr
 }
 
 type roles struct {
@@ -79,33 +59,14 @@ type validation struct {
 	Validator []fieldsEntities `json:"data"`
 }
 
-func getUserRole(user string, account string) ([]string, error) {
-	req, err := http.NewRequest("GET", os.Getenv("userApi")+"/api/user/users/uuid/"+user+"/roles", nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("account_uuid", account)
-	client := &http.Client{
-		Transport: &http.Transport{},
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println("error is :", err.Error())
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	userInfo := &roles{}
-	err = json.Unmarshal(body, userInfo)
-	if err != nil {
-		return nil, err
-	}
-	return userInfo.Data, nil
+func (a *Api) getUserRole(user string, account string) ([]string, error) {
+
+	userRoles := GetUserRolesFromToken(a.UserToken)
+
+	return userRoles, nil
 }
-func getEndPointFileds(route string, method string, service string) (*validation, error) {
-	req, err := http.NewRequest("GET", os.Getenv("coreApi")+"/api/core/endpoint/validators", nil)
+func (a *Api) getEndPointFileds(route string, method string, service string) (*validation, error) {
+	req, err := http.NewRequest("GET", os.Getenv("meta_model")+"/api/meta-model/endpoints/validators", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +75,7 @@ func getEndPointFileds(route string, method string, service string) (*validation
 	q.Add("route", route)
 	q.Add("method", method)
 	req.URL.RawQuery = q.Encode()
+	req.Header.Set("client", a.ClientToken)
 	client := &http.Client{
 		Transport: &http.Transport{},
 	}
@@ -124,11 +86,13 @@ func getEndPointFileds(route string, method string, service string) (*validation
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil, err
 	}
 	userInfo := &validation{}
 	err = json.Unmarshal(body, userInfo)
 	if err != nil {
+		fmt.Println("error is :", err.Error())
 		return nil, err
 	}
 	return userInfo, nil
@@ -138,29 +102,10 @@ type accountService struct {
 	Account string `json:"data"`
 }
 
-func getCurrentAccount(account string, service string) string {
-	req, err := http.NewRequest("GET", os.Getenv("coreApi")+"/api/core/account/"+account+"/"+service, nil)
-	if err != nil {
-		return ""
-	}
-	client := &http.Client{
-		Transport: &http.Transport{},
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println("error is :", err.Error())
-		return ""
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return ""
-	}
-	accountService := &accountService{}
-	err = json.Unmarshal(body, accountService)
-	if err != nil {
-		return ""
-	}
-	return accountService.Account
+func (a *Api) GetCurrentAccount(account string, service string) string {
+	serviceAccount := GetStringValueFromToken(a.ClientToken, service)
+
+	return serviceAccount
 }
 
 type ResponseDomain struct {
@@ -170,7 +115,7 @@ type ResponseDomain struct {
 
 func (a *Api) getDomainValuesDataByRefId(service, route string, refId []any,
 	MainField string, bodyFields []any) []map[string]any {
-	ServiceAccount := getCurrentAccount(a.Account, service)
+	ServiceAccount := a.GetCurrentAccount(a.Account, service)
 	servicePort := os.Getenv(service + "Api")
 	req, err := http.NewRequest("GET", servicePort+route, nil)
 	if err != nil {
@@ -234,19 +179,18 @@ type DomainValueResponse struct {
 }
 
 func (a *Api) getDomainValuesDataByRefKey(key string) []map[string]any {
-	servicePort := os.Getenv("coreApi")
-	req, err := http.NewRequest("GET", servicePort+"/api/core/domains/key/"+key, nil)
+	servicePort := os.Getenv("domain")
+	req, err := http.NewRequest("GET", servicePort+"/api/domain/domains/key/"+key, nil)
 	if err != nil {
 		return nil
 	}
-	req.Header.Set("account_uuid", a.Account)
-	req.Header.Set("user_uuid", a.User)
+	req.Header.Set("client", a.ClientToken)
+
 	client := &http.Client{
 		Transport: &http.Transport{},
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error is :", err.Error())
 		return nil
 	}
 	body, err := ioutil.ReadAll(res.Body)
