@@ -1158,7 +1158,7 @@ type ResErrorService struct {
 }
 
 func GetCustomErrorService(errorKey string) *Errors {
-	req, err := http.NewRequest("GET", os.Getenv("error_handling")+"/api/error-handling/errors/key/:key", nil)
+	req, err := http.NewRequest("GET", os.Getenv("error_handling")+"/api/error-handling/errors/key/"+errorKey, nil)
 	if err != nil {
 		return nil
 	}
